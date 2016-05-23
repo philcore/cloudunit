@@ -1,0 +1,3 @@
+# VOLUME MOUNTED AT RUN
+
+volume.dir=/opt/jboss/wildfly

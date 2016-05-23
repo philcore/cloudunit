@@ -30,6 +30,19 @@ MAPPED_PORT_9990=`docker inspect --format '{{ (index (index .NetworkSettings.Por
 echo "Port HTTP 8080 : " + $MAPPED_PORT_8080
 echo "Port Console 9990 : " + $MAPPED_PORT_9990
 
+docker exec -it wildfly10 touch /opt/jboss/wildfly/test.txt
+
+docker stop wildfly10
+docker start wildfly10
+
+docker exec -it wildfly10 ls /opt/jboss/wildfly/test.txt
+
+docker exec -it wildfly10 sh /opt/cloudunit/scripts/add_env.sh -Dnicolas=muller
+
+docker stop wildfly10
+docker start wildfly10
+
+
 echo "****************************************"
 echo "          SUCCESS                       "
 echo "****************************************"

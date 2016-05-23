@@ -22,7 +22,8 @@ ENV LAUNCH_JBOSS_IN_BACKGROUND true
 EXPOSE 8080 9990
 
 # CLOUDUNIT EXTENSION #
-add cloudunit /opt/cloudunit
+ADD cloudunit /opt/cloudunit
+VOLUME /opt/jboss
 
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
 
