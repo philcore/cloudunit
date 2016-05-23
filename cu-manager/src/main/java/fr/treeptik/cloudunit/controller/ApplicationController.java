@@ -15,11 +15,9 @@
 
 package fr.treeptik.cloudunit.controller;
 
-import fr.treeptik.cloudunit.aspects.CloudUnitSecurable;
 import fr.treeptik.cloudunit.dto.*;
 import fr.treeptik.cloudunit.exception.CheckException;
 import fr.treeptik.cloudunit.exception.ServiceException;
-import fr.treeptik.cloudunit.manager.ApplicationManager;
 import fr.treeptik.cloudunit.model.Application;
 import fr.treeptik.cloudunit.model.Status;
 import fr.treeptik.cloudunit.model.User;
@@ -59,9 +57,6 @@ public class ApplicationController
     @Inject
     private AuthentificationUtils authentificationUtils;
 
-    @Inject
-    private ApplicationManager applicationManager;
-
     /**
      * To verify if an application exists or not.
      *
@@ -83,8 +78,8 @@ public class ApplicationController
 
         CheckUtils.validateInput(applicationName, "check.app.name");
         CheckUtils.validateInput(serverName, "check.server.name");
-
-        applicationService.isValid(applicationName, serverName);
+        User user = authentificationUtils.getAuthentificatedUser();
+        applicationService.isValid(user, applicationName, serverName);
 
         return new HttpOk();
     }
@@ -103,13 +98,6 @@ public class ApplicationController
     public JsonResponse createApplication(@RequestBody JsonInput input)
             throws ServiceException, CheckException, InterruptedException {
 
-        // replace accent characters
-
-        /* **** Check accent in server side **** */
-        //String applicationName = AlphaNumericsCharactersCheckUtils.deAccent(input.getApplicationName());
-        //input.setApplicationName(applicationName);
-
-
         // validate the input
         input.validateCreateApp();
 
@@ -117,7 +105,10 @@ public class ApplicationController
         User user = authentificationUtils.getAuthentificatedUser();
         authentificationUtils.canStartNewAction(user, null, Locale.ENGLISH);
 
-        applicationManager.create(input.getApplicationName(), input.getLogin(), input.getServerName());
+        //applicationService.create(
+          //      input.getApplicationName(),
+        //      input.getLogin(),
+        //      input.getServerName(), null, null);
 
         return new HttpOk();
     }
@@ -131,7 +122,6 @@ public class ApplicationController
      * @throws CheckException
      * @throws InterruptedException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/restart", method = RequestMethod.POST)
     public JsonResponse restartApplication(@RequestBody JsonInput input)
@@ -153,10 +143,10 @@ public class ApplicationController
         authentificationUtils.canStartNewAction(user, application, Locale.ENGLISH);
 
         if (application.getStatus().equals(Status.START)) {
-            applicationManager.stop(application, user);
-            applicationManager.start(application, user);
+            applicationService.stop(application);
+            applicationService.start(application);
         } else if (application.getStatus().equals(Status.STOP)) {
-            applicationManager.start(application, user);
+            applicationService.start(application);
         }
 
         return new HttpOk();
@@ -172,7 +162,6 @@ public class ApplicationController
      * @throws CheckException
      * @throws InterruptedException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/start", method = RequestMethod.POST)
     public JsonResponse startApplication(@RequestBody JsonInput input)
@@ -193,7 +182,7 @@ public class ApplicationController
         // We must be sure there is no running action before starting new one
         authentificationUtils.canStartNewAction(user, application, Locale.ENGLISH);
 
-        applicationManager.start(application, user);
+        applicationService.start(application);
 
         return new HttpOk();
     }
@@ -206,7 +195,6 @@ public class ApplicationController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/stop", method = RequestMethod.POST)
     public JsonResponse stopApplication(@RequestBody JsonInput input)
@@ -224,7 +212,7 @@ public class ApplicationController
         authentificationUtils.canStartNewAction(user, application, Locale.ENGLISH);
 
         // stop the application
-        applicationManager.stop(application, user);
+        applicationService.stop(application);
 
         return new HttpOk();
     }
@@ -237,7 +225,6 @@ public class ApplicationController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/{applicationName}", method = RequestMethod.DELETE)
     public JsonResponse deleteApplication(JsonInput jsonInput)
@@ -275,7 +262,6 @@ public class ApplicationController
      * @return
      * @throws ServiceException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/{applicationName}", method = RequestMethod.GET)
     public Application detail(JsonInput jsonInput)
@@ -327,7 +313,7 @@ public class ApplicationController
         // We must be sure there is no running action before starting new one
         authentificationUtils.canStartNewAction(user, application, Locale.ENGLISH);
 
-        applicationManager.deploy(fileUpload, application);
+        //applicationService.deploy(fileUpload, application);
 
         logger.info("--DEPLOY APPLICATION WAR ENDED--");
         return new HttpOk();
@@ -381,7 +367,6 @@ public class ApplicationController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/alias", method = RequestMethod.POST)
     public JsonResponse addAlias(@RequestBody JsonInput input)
@@ -413,7 +398,6 @@ public class ApplicationController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/{applicationName}/alias/{alias}", method = RequestMethod.DELETE)
     public JsonResponse removeAlias(JsonInput jsonInput)
@@ -457,7 +441,6 @@ public class ApplicationController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/ports", method = RequestMethod.POST)
     public JsonResponse addPort(@RequestBody JsonInput input)
@@ -491,7 +474,6 @@ public class ApplicationController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @ResponseBody
     @RequestMapping(value = "/{applicationName}/ports/{portToOpen}", method = RequestMethod.DELETE)
     public JsonResponse removePort(JsonInput input)

@@ -19,10 +19,10 @@ RUN cd $HOME \
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
 # Expose the ports we're interested in
-EXPOSE 8080
+EXPOSE 8080 9990
 
 # CLOUDUNIT EXTENSION #
-add cloudunit /cloudunit
+add cloudunit /opt/cloudunit
 
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
 

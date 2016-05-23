@@ -36,10 +36,7 @@ public interface ApplicationService {
     List<Application> findAllByUser(User user)
             throws ServiceException;
 
-    Long countApp(User user)
-            throws ServiceException;
-
-    void isValid(String applicationName, String serverName)
+    void isValid(User user, String applicationName, String serverName)
             throws ServiceException, CheckException;
 
     void checkCreate(Application application, String serverName)
@@ -81,7 +78,7 @@ public interface ApplicationService {
     Application remove(Application application, User user)
             throws ServiceException, CheckException;
 
-    Application create(String applicationName, String login, String serverName, String tagName, String origin)
+    Application create(User user, String applicationName,  String serverName, String tagName, String origin)
             throws ServiceException, CheckException;
 
     void addPort(Application application, String nature, Integer port) throws ServiceException;

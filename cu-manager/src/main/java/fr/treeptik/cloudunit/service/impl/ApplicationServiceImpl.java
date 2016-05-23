@@ -124,12 +124,6 @@ public class ApplicationServiceImpl
             throws CheckException, ServiceException {
 
         logger.debug("--CHECK APP COUNT--");
-
-        if (this.countApp(application.getUser()) >= Integer.parseInt(numberMaxApplications)) {
-            throw new ServiceException("You have already created your " + numberMaxApplications
-                    + " apps into the Cloud");
-        }
-
         try {
             if (checkAppExist(application.getUser(), application.getName())) {
                 throw new CheckException(messageSource.getMessage("app.exists",
@@ -162,12 +156,7 @@ public class ApplicationServiceImpl
     @Override
     public boolean checkAppExist(User user, String applicationName)
             throws ServiceException, CheckException {
-        logger.info("--CHECK APP EXIST--");
-        if (applicationDAO.findByNameAndUser(user.getId(), applicationName, cuInstanceName) == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return applicationDAO.countByNameAndUser(user.getId(), applicationName) > 0;
     }
 
     public boolean checkNameLength(String applicationName) {
@@ -198,17 +187,12 @@ public class ApplicationServiceImpl
      * @throws ServiceException
      * @throws CheckException
      */
-    public void isValid(String applicationName, String serverName)
+    public void isValid(User user, String applicationName, String serverName)
             throws ServiceException, CheckException {
         logger.info("--CALL APP IS VALID--");
         Application application = new Application();
         logger.info("applicationName = " + applicationName + ", serverName = "
                 + serverName);
-
-        User user = authentificationUtils.getAuthentificatedUser();
-        if (user == null) {
-            throw new CheckException("User is not authentificated");
-        }
 
         application.setName(applicationName);
         application.setDisplayName(applicationName);
@@ -218,24 +202,16 @@ public class ApplicationServiceImpl
         this.checkCreate(application, serverName);
     }
 
-    @Override
     @Transactional(rollbackFor = ServiceException.class)
-    public Application create(String applicationName, String login, String serverName, String tagName, String origin)
+    public Application create(User user, String applicationName, String serverName, String tagName, String origin)
             throws ServiceException,
             CheckException {
-
-        // if tagname is null, we prefix with a ":"
-        if (tagName != null) {
-            tagName = ":" + tagName;
-        }
 
         logger.info("--CALL CREATE NEW APP--");
         Application application = new Application();
 
         logger.info("applicationName = " + applicationName + ", serverName = "
                 + serverName);
-
-        User user = authentificationUtils.getAuthentificatedUser();
 
         // For cloning management
         if (tagName != null) {
@@ -252,25 +228,11 @@ public class ApplicationServiceImpl
         // verify if application exists already
         this.checkCreate(application, serverName);
 
-        // todo : use a session flag
+        // Application is now pending
         application.setStatus(Status.PENDING);
-
         application = this.saveInDB(application);
-        serverService.checkMaxNumberReach(application);
 
-        String subdomain = System.getenv("CU_SUB_DOMAIN") == null ? "" : System
-                .getenv("CU_SUB_DOMAIN");
-
-        List<Image> imagesEnabled = imageService.findEnabledImages();
-        List<String> imageNames = new ArrayList<>();
-        for (Image image : imagesEnabled) {
-            imageNames.add(image.getName());
-        }
-
-        if (!imageNames.contains(serverName)) {
-            throw new CheckException(messageSource.getMessage(
-                    "server.not.found", null, locale));
-        }
+        String subdomain = System.getenv("CU_SUB_DOMAIN") == null ? "" : System.getenv("CU_SUB_DOMAIN");
 
         try {
             // BLOC APPLICATION
@@ -283,27 +245,22 @@ public class ApplicationServiceImpl
 
             // BLOC SERVER
             Server server = ServerFactory.getServer(serverName);
-            // We get image associated to server
             Image image = imageService.findByName(serverName);
             server.setImage(image);
             server.setApplication(application);
             server.setName(serverName);
             server = serverService.create(server, tagName);
-
             List<Server> servers = new ArrayList<>();
             servers.add(server);
             application.setServers(servers);
 
-            // Persistence for Application model
             application = applicationDAO.save(application);
 
         } catch (DataAccessException e) {
             throw new ServiceException(e.getLocalizedMessage(), e);
         }
 
-        logger.info("" + application);
-        logger.info("ApplicationService : Application " + application.getName()
-                + " successfully created.");
+        logger.info(application.getName() + " successfully created.");
 
         return application;
     }
@@ -494,7 +451,7 @@ public class ApplicationServiceImpl
     public List<Application> findAllByUser(User user)
             throws ServiceException {
         try {
-            List<Application> applications = applicationDAO.findAllByUser(user.getId(), cuInstanceName);
+            List<Application> applications = applicationDAO.findAllByUser(user.getId());
             logger.debug("ApplicationService : All Applications found ");
             return applications;
         } catch (PersistenceException e) {
@@ -509,7 +466,7 @@ public class ApplicationServiceImpl
             throws ServiceException {
         try {
             Application application = applicationDAO.findByNameAndUser(
-                    user.getId(), name, cuInstanceName);
+                    user.getId(), name);
 
             return application;
 
@@ -597,16 +554,6 @@ public class ApplicationServiceImpl
         }
 
         return application;
-    }
-
-    @Override
-    public Long countApp(User user)
-            throws ServiceException {
-        try {
-            return applicationDAO.countApp(user.getId(), cuInstanceName);
-        } catch (PersistenceException e) {
-            throw new ServiceException(e.getLocalizedMessage(), e);
-        }
     }
 
     /**
@@ -743,7 +690,7 @@ public class ApplicationServiceImpl
     public List<String> getListAliases(Application application)
             throws ServiceException {
         try {
-            return applicationDAO.findAllAliases(application.getName(), cuInstanceName);
+            return applicationDAO.findAllAliases(application.getName());
         } catch (DataAccessException e) {
             throw new ServiceException(e.getLocalizedMessage(), e);
         }
@@ -789,8 +736,7 @@ public class ApplicationServiceImpl
             throws ServiceException {
         try {
             Server server = application.getServers().get(0);
-            List<String> aliases = applicationDAO.findAllAliases(application
-                    .getName(), cuInstanceName);
+            List<String> aliases = applicationDAO.findAllAliases(application.getName());
             for (String alias : aliases) {
                 hipacheRedisUtils.updateAlias(alias, application,
                         server.getServerAction().getServerPort());
@@ -889,7 +835,7 @@ public class ApplicationServiceImpl
     }
 
     public Integer countApplicationsForImage(String cuInstanceName, User user, String tag) throws CheckException, ServiceException {
-        return applicationDAO.countAppForTagLike(cuInstanceName, user.getLogin(), tag);
+        return applicationDAO.countAppForTagLike(user.getLogin(), tag);
     }
 
 }

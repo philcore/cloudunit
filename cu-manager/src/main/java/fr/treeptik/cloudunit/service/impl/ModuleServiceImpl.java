@@ -869,7 +869,7 @@ public class ModuleServiceImpl
         Map<String, String> configShell = new HashMap<>();
 
         Application application = applicationDAO.findByNameAndUser(
-                user.getId(), applicationName, cuInstanceName);
+                user.getId(), applicationName);
 
         if (application == null) {
             throw new ServiceException("initData : Application not found", null);

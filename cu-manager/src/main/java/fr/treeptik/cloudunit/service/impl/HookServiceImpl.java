@@ -71,7 +71,7 @@ public class HookServiceImpl implements HookService {
             }
 
             logger.info("Calling Hook script : " + action.getCommand()[1] + " for " + containerName);
-            final String execId = docker.execCreate(containerName, action.getCommand(), DockerClient.ExecParameter.STDOUT, DockerClient.ExecParameter.STDERR);
+            final String execId = docker.execCreate(containerName, action.getCommand(), DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             final LogStream output = docker.execStart(execId);
             final String execOutput = output.readFully();
 

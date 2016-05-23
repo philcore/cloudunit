@@ -18,6 +18,8 @@ package fr.treeptik.cloudunit.service.impl;
 
 import com.google.common.collect.Lists;
 import com.spotify.docker.client.*;
+import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import fr.treeptik.cloudunit.dto.FileUnit;
 import fr.treeptik.cloudunit.dto.LogLine;
@@ -128,14 +130,14 @@ public class FileServiceImpl
                 final String[] command = {"bash", "-c", "rm -rf " + path};
                 String containerName = container.names().get(0);
                 String execId = docker.execCreate(containerName, command,
-                        DockerClient.ExecParameter.STDOUT,
-                        DockerClient.ExecParameter.STDERR);
+                        DockerClient.ExecCreateParam.attachStdout(),
+                        DockerClient.ExecCreateParam.attachStderr());
                 final LogStream output = docker.execStart(execId);
                 if (output != null) {
                     output.close();
                 }
             }
-        } catch (DockerException | InterruptedException | DockerCertificateException e) {
+        } catch (InterruptedException | DockerException | DockerCertificateException e) {
             throw new ServiceException("Error in listByContainerIdAndPath", e);
         }
     }
@@ -180,8 +182,8 @@ public class FileServiceImpl
                 String containerName = container.names().get(0);
                 if (containerName.startsWith("/")) containerName = containerName.substring(1);
                 execId = docker.execCreate(containerName, command,
-                        DockerClient.ExecParameter.STDOUT,
-                        DockerClient.ExecParameter.STDERR);
+                        DockerClient.ExecCreateParam.attachStdout(),
+                        DockerClient.ExecCreateParam.attachStderr());
                 ExplorerFilter filter = ExplorerFactory.getInstance()
                         .getCustomFilter(containerName);
                 final LogStream output = docker.execStart(execId);
@@ -249,8 +251,8 @@ public class FileServiceImpl
                 String execId;
                 String containerName = container.names().get(0);
                 execId = docker.execCreate(containerName, command,
-                        DockerClient.ExecParameter.STDOUT,
-                        DockerClient.ExecParameter.STDERR);
+                        DockerClient.ExecCreateParam.attachStdout(),
+                        DockerClient.ExecCreateParam.attachStderr());
                 final LogStream output = docker.execStart(execId);
                 final String execOutput = output.readFully();
                 if (execOutput != null
@@ -265,7 +267,7 @@ public class FileServiceImpl
                     output.close();
                 }
             }
-        } catch (DockerException | InterruptedException | DockerCertificateException e) {
+        } catch (DockerException | InterruptedException | DockerCertificateException  e) {
             throw new ServiceException("Error in listByContainerIdAndPath", e);
         }
 
@@ -313,8 +315,8 @@ public class FileServiceImpl
 
                 String containerName = container.names().get(0);
                 execId = docker.execCreate(containerName, command,
-                        DockerClient.ExecParameter.STDOUT,
-                        DockerClient.ExecParameter.STDERR);
+                        DockerClient.ExecCreateParam.attachStdout(),
+                        DockerClient.ExecCreateParam.attachStdout());
                 ExplorerFilter filter = ExplorerFactory.getInstance().getCustomFilter(containerName);
                 final LogStream output = docker.execStart(execId);
                 final String execOutput = output.readFully();
@@ -390,7 +392,7 @@ public class FileServiceImpl
                 }
 
             }
-        } catch (DockerException | InterruptedException | DockerCertificateException e) {
+        } catch (DockerException | InterruptedException | DockerCertificateException  e) {
             throw new ServiceException("Error in listByContainerIdAndPath", e);
         }
 

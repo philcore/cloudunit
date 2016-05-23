@@ -42,9 +42,6 @@ public interface ServerService {
     Server stopServer(Server server)
         throws ServiceException;
 
-    Server restartServer(Server server)
-        throws ServiceException;
-
     List<Server> findByApp(Application application)
         throws ServiceException;
 
@@ -74,9 +71,6 @@ public interface ServerService {
         throws ServiceException;
 
     Server findByContainerID(String id)
-        throws ServiceException;
-
-    Server confirmSSHDStart(String applicationName, String userLogin)
         throws ServiceException;
 
     void changeJavaVersion(Application application, String javaVersion)

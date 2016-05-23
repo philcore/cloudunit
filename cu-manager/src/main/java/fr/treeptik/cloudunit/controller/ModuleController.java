@@ -15,7 +15,6 @@
 
 package fr.treeptik.cloudunit.controller;
 
-import fr.treeptik.cloudunit.aspects.CloudUnitSecurable;
 import fr.treeptik.cloudunit.dto.HttpOk;
 import fr.treeptik.cloudunit.dto.JsonInput;
 import fr.treeptik.cloudunit.dto.JsonResponse;
@@ -71,7 +70,6 @@ public class ModuleController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public JsonResponse addModule(@RequestBody JsonInput input)
@@ -127,7 +125,6 @@ public class ModuleController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @RequestMapping(value = "/{applicationName}/{moduleName}", method = RequestMethod.DELETE)
     @ResponseBody
     public JsonResponse removeModule(JsonInput jsonInput)

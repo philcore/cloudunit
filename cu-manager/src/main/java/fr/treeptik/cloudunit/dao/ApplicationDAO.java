@@ -36,10 +36,15 @@ public interface ApplicationDAO
             "left join fetch m.listPorts " +
             "left join fetch s.listPorts " +
             "left join fetch a.portsToOpen " +
-            "where a.user.id=:userId and a.name=:name and a.cuInstanceName=:cuInstanceName")
+            "where a.user.id=:userId and a.name=:name")
     Application findByNameAndUser(@Param("userId") Integer userId,
-                                  @Param("name") String name,
-                                  @Param("cuInstanceName") String cuInstanceName)
+                                  @Param("name") String name)
+            throws DataAccessException;
+
+    @Query("Select count(a) from Application a " +
+            "where a.user.id=:userId and a.name=:name")
+    Integer countByNameAndUser(@Param("userId") Integer userId,
+                                  @Param("name") String name)
             throws DataAccessException;
 
     @Query("Select distinct a from Application a " +
@@ -48,36 +53,29 @@ public interface ApplicationDAO
             "left join fetch a.deployments " +
             "left join fetch a.aliases " +
             "left join fetch a.portsToOpen " +
-            "where a.user.id=:userId and a.cuInstanceName=:cuInstanceName")
-    public List<Application> findAllByUser(@Param("userId") Integer userId,
-                                           @Param("cuInstanceName") String cuInstanceName)
+            "where a.user.id=:userId")
+    public List<Application> findAllByUser(@Param("userId") Integer userId)
             throws DataAccessException;
 
-    @Query("select al from Application a left join a.aliases al where a.name=:name " +
-            "and a.cuInstanceName=:cuInstanceName")
-    public List<String> findAllAliases(@Param("name") String applicationName,
-                                       @Param("cuInstanceName") String cuInstanceName)
+    @Query("select al from Application a left join a.aliases al where a.name=:name ")
+    public List<String> findAllAliases(@Param("name") String applicationName)
             throws DataAccessException;
 
     @Query("select al from Application a left join a.aliases al")
     public List<String> findAliasesForAllApps()
             throws DataAccessException;
 
-    @Query("Select a from Application a where a.name=:name and a.user.login=:login  " +
-            "and a.cuInstanceName=:cuInstanceName")
+    @Query("Select a from Application a where a.name=:name and a.user.login=:login")
     Application findByUserLoginAndName(@Param("login") String userLogin,
-                                       @Param("name") String applicationName,
-                                       @Param("cuInstanceName") String cuInstanceName)
+                                       @Param("name") String applicationName)
             throws DataAccessException;
 
-    @Query("Select count(a) from Application a where a.user.id=:userId and a.cuInstanceName=:cuInstanceName")
-    Long countApp(@Param("userId") Integer userId,
-                  @Param("cuInstanceName") String cuInstanceName)
+    @Query("Select count(a) from Application a where a.user.id=:userId")
+    Long countApp(@Param("userId") Integer userId)
             throws DataAccessException;
 
-    @Query("select count(a) from Application a where a.user.login=:userLogin and a.cuInstanceName=:cuInstanceName and a.origin=:imageTag")
+    @Query("select count(a) from Application a where a.user.login=:userLogin and a.origin=:imageTag")
     Integer countAppForTagLike(
-            @Param("cuInstanceName") String cuInstanceName,
             @Param("userLogin") String userLogin,
             @Param("imageTag") String imageTag)
             throws DataAccessException;

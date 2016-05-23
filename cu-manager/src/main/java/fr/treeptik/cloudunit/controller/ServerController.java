@@ -16,7 +16,6 @@
 
 package fr.treeptik.cloudunit.controller;
 
-import fr.treeptik.cloudunit.aspects.CloudUnitSecurable;
 import fr.treeptik.cloudunit.dto.HttpOk;
 import fr.treeptik.cloudunit.dto.JsonInput;
 import fr.treeptik.cloudunit.dto.JsonResponse;
@@ -70,7 +69,6 @@ public class ServerController
      * @throws ServiceException
      * @throws CheckException
      */
-    @CloudUnitSecurable
     @RequestMapping(value = "/configuration/jvm", method = RequestMethod.PUT)
     @ResponseBody
     public JsonResponse setOptionsJVM(@RequestBody JsonInput input)

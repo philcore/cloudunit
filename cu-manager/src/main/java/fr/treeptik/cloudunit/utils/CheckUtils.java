@@ -71,7 +71,7 @@ public class CheckUtils {
             throws CheckException {
         if (field == null
                 || field.trim().length() == 0
-                /*|| "undefined".equals(field)*/
+                || "undefined".equals(field)
                 || field.length() > size) {
             String messageTranslated = messageSource.getMessage(message, null, Locale.ENGLISH);
             throw new CheckException(messageTranslated + " : " + field);

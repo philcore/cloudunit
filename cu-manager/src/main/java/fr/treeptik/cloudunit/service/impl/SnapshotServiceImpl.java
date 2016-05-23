@@ -276,7 +276,6 @@ public class SnapshotServiceImpl
             throws ServiceException, InterruptedException, CheckException {
 
         Snapshot snapshot = null;
-        // Tests préliminaires de la création d'une application
         try {
             User user = authentificationUtils.getAuthentificatedUser();
             snapshot = this.findByTagAndUser(user.getLogin(), tag);
@@ -286,11 +285,6 @@ public class SnapshotServiceImpl
                 throw new CheckException("Please put an app name");
             }
 
-            if (applicationService.countApp(user) >= Integer.parseInt(numberMaxApplications)) {
-                authentificationUtils.allowUser(user);
-                throw new ServiceException("You have already created your " + numberMaxApplications
-                        + " apps into the Cloud");
-            }
             if (applicationService.checkAppExist(user, applicationName)) {
                 authentificationUtils.allowUser(user);
                 throw new CheckException("This application already exists");
@@ -302,7 +296,7 @@ public class SnapshotServiceImpl
 
             // creation de la nouvelle app à partir de l'image tagée
             Application application =
-                    applicationService.create(applicationName, user.getLogin(), snapshot.getType(),
+                    applicationService.create(user, applicationName, snapshot.getType(),
                             snapshot.getFullTag(), snapshot.getTag());
 
             // We need it to get lazy modules relationships
@@ -352,7 +346,7 @@ public class SnapshotServiceImpl
             final String[] commandBackupData = {"bash", "-c", "/cloudunit/scripts/backup-data.sh"};
             final String[] commandStart = {"bash", "-c", "/cloudunit/scripts/cu-start.sh"};
 
-            String execId = docker.execCreate(module.getName(), commandStop, DockerClient.ExecParameter.STDOUT, DockerClient.ExecParameter.STDERR);
+            String execId = docker.execCreate(module.getName(), commandStop, DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             LogStream output = docker.execStart(execId);
             String execOutput = output.readFully();
             System.out.println(execOutput);
@@ -360,7 +354,7 @@ public class SnapshotServiceImpl
                 output.close();
             }
 
-            execId = docker.execCreate(module.getName(), commandBackupData, DockerClient.ExecParameter.STDOUT, DockerClient.ExecParameter.STDERR);
+            execId = docker.execCreate(module.getName(), commandBackupData, DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             output = docker.execStart(execId);
             execOutput = output.readFully();
             System.out.println(execOutput);
@@ -368,7 +362,7 @@ public class SnapshotServiceImpl
                 output.close();
             }
 
-            execId = docker.execCreate(module.getName(), commandStart, DockerClient.ExecParameter.STDOUT, DockerClient.ExecParameter.STDERR);
+            execId = docker.execCreate(module.getName(), commandStart, DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             output = docker.execStart(execId);
             execOutput = output.readFully();
             System.out.println(execOutput);
@@ -434,7 +428,7 @@ public class SnapshotServiceImpl
             }
 
             final String[] commandRestoreData = {"bash", "-c", "/cloudunit/scripts/restore-data.sh"};
-            String execId = docker.execCreate(module.getName(), commandRestoreData, DockerClient.ExecParameter.STDOUT, DockerClient.ExecParameter.STDERR);
+            String execId = docker.execCreate(module.getName(), commandRestoreData, DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             LogStream output = docker.execStart(execId);
             String execOutput = output.readFully();
             System.out.println(execOutput);
