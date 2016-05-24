@@ -46,13 +46,8 @@ cd /home/$USER/cloudunit/cu-platform
 echo -e "\nStarting the platform\n"
 /home/$USER/cloudunit/cu-platform/start-platform.sh reset
 
-echo -e "\nChanging directory\n"
-cd /home/$USER/cloudunit/cu-services
 
-echo -e "\nCurrent directory: `pwd`\n"
 
-echo -e "\nRunning services\n"
-/home/$USER/cloudunit/cu-services/run-services.sh
 
 
 

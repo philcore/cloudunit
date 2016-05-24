@@ -264,7 +264,6 @@ public class ApplicationServiceImpl
             servers.add(server);
             application.setServers(servers);
 
-
             application = applicationDAO.save(application);
 
         } catch (DataAccessException e) {

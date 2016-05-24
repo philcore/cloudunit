@@ -22,6 +22,7 @@ import fr.treeptik.cloudunit.docker.model.DockerContainerBuilder;
 import fr.treeptik.cloudunit.exception.CheckException;
 import fr.treeptik.cloudunit.exception.DockerJSONException;
 import fr.treeptik.cloudunit.exception.ServiceException;
+import fr.treeptik.cloudunit.functions.ContainerNaming;
 import fr.treeptik.cloudunit.hooks.HookAction;
 import fr.treeptik.cloudunit.model.*;
 import fr.treeptik.cloudunit.service.*;
@@ -50,25 +51,16 @@ public class ServerServiceImpl
     private ApplicationDAO applicationDAO;
 
     @Inject
-    private UserService userService;
-
-    @Inject
-    private ModuleService moduleService;
-
-    @Inject
-    private ApplicationService applicationService;
-
-    @Inject
     private HookService hookService;
+
+    @Inject
+    private DockerService dockerService;
 
     @Inject
     private ShellUtils shellUtils;
 
     @Inject
     private HipacheRedisUtils hipacheRedisUtils;
-
-    @Inject
-    private ContainerMapper containerMapper;
 
     @Value("${cloudunit.max.servers:1}")
     private String maxServers;
@@ -135,24 +127,17 @@ public class ServerServiceImpl
         // Build a custom container
         String containerName = null;
         try {
-            containerName = AlphaNumericsCharactersCheckUtils
-                    .convertToAlphaNumerics(cuInstanceName.toLowerCase()) + "-" + AlphaNumericsCharactersCheckUtils
-                    .convertToAlphaNumerics(user.getLogin())
-                    + "-"
-                    + AlphaNumericsCharactersCheckUtils
-                    .convertToAlphaNumerics(server.getApplication()
-                            .getName()) + "-" + server.getName();
+            containerName = ContainerNaming.generateName(cuInstanceName, user.getLogin(), application.getName(), server.getName());
+            logger.debug("containerName:" + containerName);
 
             String imagePath = server.getImage().getPath() + tagName;
             logger.debug("imagePath:" + imagePath);
 
-            String subdomain = System.getenv("CU_SUB_DOMAIN");
-            if (subdomain == null) { subdomain = ""; }
-            logger.info("env.CU_SUB_DOMAIN=" + subdomain);
-
-            server.getApplication().setSuffixCloudUnitIO(subdomain + suffixCloudUnitIO);
+            server.getApplication().setSuffixCloudUnitIO(suffixCloudUnitIO);
             String sharedDir = JvmOptionsUtils.extractDirectory(server.getJvmOptions());
             logger.info("shared dir : " + sharedDir);
+
+            dockerService.runContainer(containerName, imagePath, null);
 
             hipacheRedisUtils.createRedisAppKey(server.getApplication(),
                     server.getContainerIP(), server.getServerAction()
@@ -417,7 +402,7 @@ public class ServerServiceImpl
             String sharedDir = JvmOptionsUtils.extractDirectory(server.getJvmOptions());
             DockerContainer.start(dockerContainer, application.getManagerIp(), sharedDir);
             dockerContainer = DockerContainer.findOne(dockerContainer, application.getManagerIp());
-            server = containerMapper.mapDockerContainerToServer(dockerContainer, server);
+            //server = containerMapper.mapDockerContainerToServer(dockerContainer, server);
 
             String dockerManagerIP = server.getApplication().getManagerIp();
             server.setStartDate(new Date());
