@@ -1,3 +1,10 @@
-# VOLUME MOUNTED AT RUN
+# ##################################################################### #
+#                           DEFINITION OF PROPERTIES                    #
+# ##################################################################### #
 
+# data volume to persist
 volume.dir=/opt/jboss/wildfly
+
+# file specific to server for jvm configuration
+jvm.config.file=/opt/jboss/wildfly/bin/standalone.conf
+

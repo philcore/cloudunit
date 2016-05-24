@@ -5,4 +5,6 @@ export CU_PASSWORD=$2
 
 /opt/jboss/wildfly/bin/add-user.sh $CU_USER $CU_PASSWORD --silent
 
+exit $?
+
 

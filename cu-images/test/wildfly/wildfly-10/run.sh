@@ -37,11 +37,13 @@ docker start wildfly10
 
 docker exec -it wildfly10 ls /opt/jboss/wildfly/test.txt
 
-docker exec -it wildfly10 sh /opt/cloudunit/scripts/add_env.sh -Dnicolas=muller
+docker exec -it wildfly10 sh /opt/cloudunit/scripts/add_env.sh -Dvariable1=value1
 
 docker stop wildfly10
 docker start wildfly10
 
+docker exec -it wildfly10 cat /opt/jboss/wildfly/bin/standalone.conf | grep "variable1=value1"
+echo $?
 
 echo "****************************************"
 echo "          SUCCESS                       "
