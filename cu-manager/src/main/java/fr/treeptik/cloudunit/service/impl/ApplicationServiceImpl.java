@@ -202,6 +202,18 @@ public class ApplicationServiceImpl
         this.checkCreate(application, serverName);
     }
 
+    /**
+     * Create a new application
+     *
+     * @param user
+     * @param applicationName
+     * @param serverName
+     * @param tagName
+     * @param origin
+     * @return
+     * @throws ServiceException
+     * @throws CheckException
+     */
     @Transactional(rollbackFor = ServiceException.class)
     public Application create(User user, String applicationName, String serverName, String tagName, String origin)
             throws ServiceException,
@@ -232,11 +244,9 @@ public class ApplicationServiceImpl
         application.setStatus(Status.PENDING);
         application = this.saveInDB(application);
 
-        String subdomain = System.getenv("CU_SUB_DOMAIN") == null ? "" : System.getenv("CU_SUB_DOMAIN");
-
         try {
             // BLOC APPLICATION
-            application.setDomainName(subdomain + suffixCloudUnitIO);
+            application.setDomainName(suffixCloudUnitIO);
             application = applicationDAO.save(application);
             application.setManagerIp(dockerManagerIp);
             application.setJvmRelease(javaVersionDefault);
@@ -253,6 +263,7 @@ public class ApplicationServiceImpl
             List<Server> servers = new ArrayList<>();
             servers.add(server);
             application.setServers(servers);
+
 
             application = applicationDAO.save(application);
 

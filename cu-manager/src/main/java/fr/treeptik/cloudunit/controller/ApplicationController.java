@@ -105,10 +105,9 @@ public class ApplicationController
         User user = authentificationUtils.getAuthentificatedUser();
         authentificationUtils.canStartNewAction(user, null, Locale.ENGLISH);
 
-        //applicationService.create(
-          //      input.getApplicationName(),
-        //      input.getLogin(),
-        //      input.getServerName(), null, null);
+        applicationService.create(user,
+                input.getApplicationName(),
+                input.getServerName(), null, null);
 
         return new HttpOk();
     }

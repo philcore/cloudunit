@@ -1,34 +1,14 @@
-/*
- * LICENCE : CloudUnit is available under the GNU Affero General Public License : https://gnu.org/licenses/agpl.html
- * but CloudUnit is licensed too under a standard commercial license.
- * Please contact our sales team if you would like to discuss the specifics of our Enterprise license.
- * If you are not sure whether the AGPL is right for you,
- * you can always test our software under the AGPL and inspect the source code before you contact us
- * about purchasing a commercial license.
- *
- * LEGAL TERMS : "CloudUnit" is a registered trademark of Treeptik and can't be used to endorse
- * or promote products derived from this project without prior written permission from Treeptik.
- * Products or services derived from this software may not be called "CloudUnit"
- * nor may "Treeptik" or similar confusing terms appear in their names without prior written permission.
- * For any questions, contact us : contact@treeptik.fr
- */
-
 package fr.treeptik.cloudunit.service;
 
-import fr.treeptik.cloudunit.exception.CheckException;
-import fr.treeptik.cloudunit.exception.DockerJSONException;
-import fr.treeptik.cloudunit.exception.ProviderException;
-import fr.treeptik.cloudunit.exception.ServiceException;
+import fr.treeptik.cloudunit.model.User;
 
+/**
+ * Created by angular5 on 03/05/16.
+ */
 public interface DockerService {
 
-    public void checkAllContainersStatus()
-        throws ServiceException, CheckException;
+    public void runContainer(String containerName, String image, String sharedDir);
 
-    void checkAllApplicationContainersStatus()
-        throws ServiceException,
-        CheckException, DockerJSONException, ProviderException;
+    public String exec(String containerName, String command);
 
-    public String checkDockerInfos()
-        throws ServiceException;
 }
