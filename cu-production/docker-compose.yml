@@ -83,6 +83,7 @@ nginx:
         - "443:443"
     links:
         - tomcat:tomcat
+        - gitlab:gitlab
     volumes:
         - ./nginx/sites-enabled:/etc/nginx/sites-enabled
         - ./nginx/cloudunit.io:/etc/ssl/cloudunit.io

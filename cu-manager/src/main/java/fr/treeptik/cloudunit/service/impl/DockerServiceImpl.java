@@ -61,8 +61,10 @@ public class DockerServiceImpl implements DockerService {
 
     @Override
     public void runContainer(String containerName, String image, String sharedDir) {
-        DockerClient dockerClient = null;
+        DockerClient dockerClient = getDockerClient();
         try {
+            dockerClient.pull("busybox");
+
             // Bind container ports to host ports
             final String[] ports = {"8080", "22"};
             final Map<String, List<PortBinding>> portBindings = new HashMap<String, List<PortBinding>>();
@@ -90,6 +92,7 @@ public class DockerServiceImpl implements DockerService {
             dockerClient.startContainer(id);
 
         } catch (Exception e) {
+            e.printStackTrace();
             logger.error(containerName, e);
         } finally {
             if (dockerClient != null) { dockerClient.close(); }

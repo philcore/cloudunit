@@ -76,11 +76,12 @@ public class ApplicationController
             logger.info("serverName:" + serverName);
         }
 
-        CheckUtils.validateInput(applicationName, "check.app.name");
-        CheckUtils.validateInput(serverName, "check.server.name");
-        User user = authentificationUtils.getAuthentificatedUser();
-        applicationService.isValid(user, applicationName, serverName);
-
+        if (serverName != null) {
+            CheckUtils.validateInput(applicationName, "check.app.name");
+            CheckUtils.validateInput(serverName, "check.server.name");
+            User user = authentificationUtils.getAuthentificatedUser();
+            applicationService.isValid(user, applicationName, serverName);
+        }
         return new HttpOk();
     }
 
