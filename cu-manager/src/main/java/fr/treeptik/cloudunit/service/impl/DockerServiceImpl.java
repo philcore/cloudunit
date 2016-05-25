@@ -6,7 +6,9 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.messages.*;
+import fr.treeptik.cloudunit.exception.CheckException;
 import fr.treeptik.cloudunit.exception.ServiceException;
 import fr.treeptik.cloudunit.model.User;
 import fr.treeptik.cloudunit.service.DockerService;
@@ -21,14 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * This class is a wrapper to docker spotify api to purpose main functions for CloudUnit Business
@@ -60,36 +56,40 @@ public class DockerServiceImpl implements DockerService {
     }
 
     @Override
+    public void pullContainer(String image) throws CheckException {
+        DockerClient dockerClient = getDockerClient();
+        try {
+            dockerClient.pull(image);
+        } catch(ImageNotFoundException iex) {
+            throw new CheckException(image + " not found", iex);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(image, e);
+        } finally {
+            if (dockerClient != null) { dockerClient.close(); }
+        }
+    }
+
+    @Override
     public void runContainer(String containerName, String image, String sharedDir) {
         DockerClient dockerClient = getDockerClient();
         try {
-            dockerClient.pull("busybox");
-
             // Bind container ports to host ports
-            final String[] ports = {"8080", "22"};
-            final Map<String, List<PortBinding>> portBindings = new HashMap<String, List<PortBinding>>();
-            for (String port : ports) {
-                List<PortBinding> hostPorts = new ArrayList<PortBinding>();
-                hostPorts.add(PortBinding.of("0.0.0.0", port));
-                portBindings.put(port, hostPorts);
-            }
-
-            final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
+            final HostConfig hostConfig = HostConfig.builder().build();
 
             // Create container with exposed ports
             final ContainerConfig containerConfig = ContainerConfig.builder()
                     .hostConfig(hostConfig)
-                    .image(image).exposedPorts(ports)
+                    .image(image)
                     .build();
 
             final ContainerCreation creation = dockerClient.createContainer(containerConfig);
             final String id = creation.id();
 
-            // Inspect container
-            final ContainerInfo info = dockerClient.inspectContainer(id);
-
             // Start container
             dockerClient.startContainer(id);
+            // Set the name
+            dockerClient.renameContainer(id, containerName);
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -27,9 +27,19 @@ public class DockerServiceImplTest {
     @Autowired
     private DockerService dockerService;
 
+    @Test(expected = fr.treeptik.cloudunit.exception.CheckException.class)
+    public void pullWrongImage() throws Exception {
+        dockerService.pullContainer("XXXXXXXXXXX");
+    }
+
+    @Test
+    public void pullContainer() throws Exception {
+        dockerService.pullContainer("tomcat:8.0");
+    }
+
     @Test
     public void runContainer() throws Exception {
-        dockerService.runContainer("myBeautifulBrokenBrain", "busybox", null);
+        dockerService.runContainer("felix", "tomcat:8.0", null);
     }
 
     @Test
