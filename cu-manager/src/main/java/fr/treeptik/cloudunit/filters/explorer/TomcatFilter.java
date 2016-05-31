@@ -73,6 +73,7 @@ public class TomcatFilter
 
     @Override
     public void isSafe(FileUnit fileUnit) {
+
         if (logger.isDebugEnabled()) {
             logger.debug("breadcrump : " + fileUnit.getBreadcrump());
         }
@@ -87,4 +88,5 @@ public class TomcatFilter
             fileUnit.safe(false);
         }
     }
+
 }

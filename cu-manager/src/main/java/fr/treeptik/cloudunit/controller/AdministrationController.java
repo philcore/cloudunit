@@ -52,9 +52,6 @@ public class AdministrationController
     private ImageService imageService;
 
     @Inject
-    private ModuleService moduleService;
-
-    @Inject
     private UserService userService;
 
     @Inject
@@ -170,34 +167,6 @@ public class AdministrationController
         }
         this.userService.changeUserRights(input.getLogin(), input.getRole());
         return new HttpOk();
-    }
-
-    /**
-     * Activate an image
-     *
-     * @param imageName
-     * @return
-     * @throws ServiceException
-     */
-    @ResponseBody
-    @RequestMapping(value = "/images/imageName/{imageName}/enable", method = RequestMethod.POST)
-    public Image enableImage(@PathVariable String imageName)
-            throws ServiceException {
-        return this.imageService.enableImage(imageName);
-    }
-
-    /**
-     * disable an image
-     *
-     * @param imageName
-     * @return
-     * @throws ServiceException
-     */
-    @ResponseBody
-    @RequestMapping(value = "/images/imageName/{imageName}/disable", method = RequestMethod.POST)
-    public Image disableImage(@PathVariable String imageName)
-            throws ServiceException {
-        return this.imageService.disableImage(imageName);
     }
 
     /**

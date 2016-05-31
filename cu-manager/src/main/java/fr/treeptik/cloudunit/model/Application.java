@@ -26,15 +26,9 @@ import java.text.Normalizer;
 import java.util.*;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name", "cuInstanceName"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"}))
 public class Application
         implements Serializable {
-
-    public static final String ALREADY_DEPLOYED = "ALREADY_DEPLOYED";
-
-    public static final String NONE = "NONE";
-
-    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,11 +37,6 @@ public class Application
     private String name;
 
     private String displayName;
-
-    /**
-     * CloudUnit instance name (e.g. DEV, QA, PROD).
-     */
-    private String cuInstanceName;
 
     /**
      * Origin property issue from snapshot when created by clone process.
@@ -66,25 +55,7 @@ public class Application
 
     @OrderBy("id asc")
     @OneToMany(mappedBy = "application", fetch = FetchType.LAZY)
-    private Set<Module> modules;
-
-    @OrderBy("id asc")
-    @OneToMany(mappedBy = "application", fetch = FetchType.LAZY)
     private Set<Server> servers;
-
-    @OneToMany(mappedBy = "application", fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    private Set<Deployment> deployments;
-
-
-    @ElementCollection
-    private Set<String> aliases;
-
-    /**
-     * Suffixe du domaine des applications déployées Ce champ est dynamique à
-     * travers le profil maven
-     */
-    private String suffixCloudUnitIO;
 
     private String domainName;
 
@@ -92,35 +63,24 @@ public class Application
 
     private String managerPort;
 
-    // version de java sous laquelle tourne les containers serveurs et git
-    // (maven)
     private String jvmRelease;
-
-    @JsonIgnore
-    private String restHost;
 
     private String deploymentStatus;
 
     private boolean isAClone;
 
-    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "application")
-    @OrderBy(value = "port")
-    private Set<PortToOpen> portsToOpen;
-
     public Application() {
         super();
         date = new Date();
         isAClone = false;
-        deploymentStatus = Application.NONE;
+        deploymentStatus = "NONE";
     }
 
-    public Application(Integer id, String name, String cuInstanceName, User user, List<Module> modules) {
+    public Application(Integer id, String name, User user) {
         super();
         this.id = id;
         this.name = name;
-        this.cuInstanceName = cuInstanceName;
         this.user = user;
-        this.modules = new HashSet<>(modules);
     }
 
     public Integer getId() {
@@ -146,10 +106,6 @@ public class Application
 
     public void setDisplayName(String displayName) { this.displayName = displayName; }
 
-    public String getCuInstanceName() { return cuInstanceName; }
-
-    public void setCuInstanceName(String cuInstanceName) { this.cuInstanceName = cuInstanceName; }
-
     public String getOrigin() { return origin; }
 
     public void setOrigin(String origin) { this.origin = origin; }
@@ -168,18 +124,6 @@ public class Application
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public List<Module> getModules() {
-        if (modules != null) {
-            return new ArrayList<>(modules);
-        } else {
-            return new ArrayList<>();
-        }
-    }
-
-    public void setModules(List<Module> modules) {
-        this.modules = new HashSet<>(modules);
     }
 
     public Date getDate() {
@@ -202,26 +146,6 @@ public class Application
         this.servers = new HashSet<>(servers);
     }
 
-    public List<Deployment> getDeployments() {
-        if (deployments != null) {
-            return new ArrayList<>(deployments);
-        } else {
-            return new ArrayList<>();
-        }
-    }
-
-    public void setDeployments(List<Deployment> deployments) {
-        this.deployments = new HashSet<>(deployments);
-    }
-
-    public String getSuffixCloudUnitIO() {
-        return suffixCloudUnitIO;
-    }
-
-    public void setSuffixCloudUnitIO(String suffixCloudUnitIO) {
-        this.suffixCloudUnitIO = suffixCloudUnitIO;
-    }
-
     public String getManagerIp() {
         return managerIp;
     }
@@ -236,27 +160,6 @@ public class Application
 
     public void setManagerPort(String managerPort) {
         this.managerPort = managerPort;
-    }
-
-    public String getRestHost() {
-        return restHost;
-    }
-
-    public void setRestHost(String restHost) {
-        this.restHost = restHost;
-    }
-
-    public String getLocation() {
-        return "http://" + name + "-" + user.getLogin() + "-"
-                + user.getOrganization() + suffixCloudUnitIO;
-    }
-
-    public Set<String> getAliases() {
-        return aliases;
-    }
-
-    public void setAliases(Set<String> aliases) {
-        this.aliases = aliases;
     }
 
     public String getJvmRelease() {
@@ -279,11 +182,8 @@ public class Application
                 ", managerIP='" + managerIp + '\'' +
                 ", managerPort='" + managerPort + '\'' +
                 ", jvmRelease='" + jvmRelease + '\'' +
-                ", restHost='" + restHost + '\'' +
                 ", deploymentStatus='" + deploymentStatus + '\'' +
-                ", suffixCloudUnitIO='" + suffixCloudUnitIO + '\'' +
                 ", isAClone=" + isAClone +
-                ", cuInstanceName=" + cuInstanceName +
                 ", origin=" + origin + '\'' +
                 '}';
     }
@@ -342,45 +242,5 @@ public class Application
     public void setDeploymentStatus(String deploymentStatus) {
         this.deploymentStatus = deploymentStatus;
     }
-
-    /**
-     * One application is composed by many containers
-     * These containers containers can be servers, modules or tools
-     * These methods return the SSH Port associated for the container Id
-     *
-     * @return
-     */
-    public String getSShPortByContainerId(String id) {
-        if (id == null) {
-            return null;
-        }
-        String sshPort = null;
-        for (Server server : servers) {
-            if (id.equals(server.getContainerID().substring(0, 12))) {
-                sshPort = server.getSshPort();
-            }
-        }
-        // real modules + tools
-        for (Module module : modules) {
-            if (id.equals(module.getContainerID().substring(0, 12))) {
-                sshPort = module.getSshPort();
-            }
-        }
-        return sshPort;
-    }
-
-    public Set<PortToOpen> getPortsToOpen() {
-
-        if (portsToOpen == null) {
-            return new HashSet<>();
-        }
-
-        return this.portsToOpen;
-    }
-
-    public void setPortsToOpen(Set<PortToOpen> portsToOpen) {
-        this.portsToOpen = portsToOpen;
-    }
-
 
 }

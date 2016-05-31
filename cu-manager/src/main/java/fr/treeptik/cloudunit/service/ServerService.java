@@ -48,10 +48,6 @@ public interface ServerService {
     Server findByName(String serverName)
         throws ServiceException;
 
-    void checkMaxNumberReach(Application application)
-        throws ServiceException,
-        CheckException;
-
     Server saveInDB(Server server)
         throws ServiceException;
 
@@ -76,9 +72,8 @@ public interface ServerService {
     void changeJavaVersion(Application application, String javaVersion)
         throws CheckException, ServiceException;
 
-    Server create(Server server, String tag)
+    Server create(String repository, String tag)
         throws ServiceException,
         CheckException;
-
 
 }

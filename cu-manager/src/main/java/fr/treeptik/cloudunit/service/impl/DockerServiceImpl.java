@@ -6,6 +6,7 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.DockerRequestException;
 import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.messages.*;
 import fr.treeptik.cloudunit.exception.CheckException;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * This class is a wrapper to docker spotify api to purpose main functions for CloudUnit Business
@@ -56,22 +58,22 @@ public class DockerServiceImpl implements DockerService {
     }
 
     @Override
-    public void pullContainer(String image) throws CheckException {
+    public void pullContainer(String image) throws CheckException, ServiceException {
         DockerClient dockerClient = getDockerClient();
         try {
             dockerClient.pull(image);
-        } catch(ImageNotFoundException iex) {
+        } catch(ImageNotFoundException | DockerRequestException iex) {
             throw new CheckException(image + " not found", iex);
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(image, e);
+            throw new ServiceException(image + " not found", e);
         } finally {
             if (dockerClient != null) { dockerClient.close(); }
         }
     }
 
     @Override
-    public void runContainer(String containerName, String image, String sharedDir) {
+    public void runContainer(String containerName, String image, String sharedDir)
+            throws CheckException, ServiceException {
         DockerClient dockerClient = getDockerClient();
         try {
             // Bind container ports to host ports
@@ -92,12 +94,62 @@ public class DockerServiceImpl implements DockerService {
             dockerClient.renameContainer(id, containerName);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(containerName, e);
+            StringBuilder msgError = new StringBuilder();
+            msgError.append("containerName=").append(containerName);
+            msgError.append(", image=").append(image).append(", sharedDir=").append(sharedDir);
+            throw new ServiceException(msgError.toString(), e);
         } finally {
             if (dockerClient != null) { dockerClient.close(); }
         }
     }
+
+    @Override
+    public void removeContainer(String containerName, boolean force)
+            throws CheckException, ServiceException {
+        DockerClient dockerClient = getDockerClient();
+        try {
+            dockerClient.removeContainer(containerName, DockerClient.RemoveContainerParam.forceKill(force));
+        } catch (Exception e) {
+            StringBuilder msgError = new StringBuilder();
+            msgError.append("containerName=").append(containerName);
+            throw new ServiceException(msgError.toString(), e);
+        } finally {
+            if (dockerClient != null) { dockerClient.close(); }
+        }
+    }
+
+    @Override
+    public List<Container> list(boolean all)
+            throws CheckException, ServiceException {
+        DockerClient dockerClient = getDockerClient();
+        List<Container> containerList;
+        try {
+            containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers(all));
+        } catch (Exception e) {
+            StringBuilder msgError = new StringBuilder();
+            msgError.append("all=").append(all);
+            throw new ServiceException(msgError.toString(), e);
+        } finally {
+            if (dockerClient != null) { dockerClient.close(); }
+        }
+        return containerList;
+    }
+
+    @Override
+    public Boolean isRunning(String containerName) throws CheckException, ServiceException {
+        DockerClient dockerClient = getDockerClient();
+        try {
+            final ContainerInfo info = dockerClient.inspectContainer("containerID");
+            return info.state().running();
+        } catch (Exception e) {
+            StringBuilder msgError = new StringBuilder();
+            msgError.append("containerName=").append(containerName);
+            throw new ServiceException(msgError.toString(), e);
+        } finally {
+            if (dockerClient != null) { dockerClient.close(); }
+        }
+    }
+
 
     /**
      * Execute a shell conmmad into a container. Return the output as String
@@ -107,7 +159,8 @@ public class DockerServiceImpl implements DockerService {
      * @return
      */
     @Override
-    public String exec(String containerName, String command) {
+    public String exec(String containerName, String command)
+            throws CheckException, ServiceException {
         DockerClient dockerClient = null;
         String execOutput = null;
         try {

@@ -11,10 +11,9 @@ import static org.bouncycastle.crypto.tls.ConnectionEnd.server;
  */
 public class ContainerNaming {
 
-    public static String generateName(String cuInstanceName, String userLogin, String applicatioName, String serverName)
+    public static String generateName(String userLogin, String applicatioName, String serverName)
     throws UnsupportedEncodingException {
-            return AlphaNumericsCharactersCheckUtils.convertToAlphaNumerics(cuInstanceName)
-                + "-" + AlphaNumericsCharactersCheckUtils.convertToAlphaNumerics(userLogin)
+            return AlphaNumericsCharactersCheckUtils.convertToAlphaNumerics(userLogin)
                 + "-" + AlphaNumericsCharactersCheckUtils.convertToAlphaNumerics(applicatioName)
                 + "-" + serverName;
     }

@@ -16,7 +16,6 @@
 
 package fr.treeptik.cloudunit.service.impl;
 
-import fr.treeptik.cloudunit.docker.model.DockerContainer;
 import fr.treeptik.cloudunit.exception.ErrorDockerJSONException;
 import fr.treeptik.cloudunit.model.Application;
 import fr.treeptik.cloudunit.model.Module;
@@ -109,73 +108,6 @@ public class MonitoringServiceImpl
             logger.error("" + e);
         }
         return result;
-    }
-
-    /**
-     * Methode qui permet de mettre en relation les containers Id et leur nom
-     */
-    @Scheduled(fixedDelay = 10000)
-    public void generateRelationBetweenContainersNameAndFullId() {
-        try {
-            logger.debug("generateRelationBetweenContainersNameAndFullId");
-            if ("true".equals(System.getenv("CU_MAINTENANCE"))) {
-                return;
-            }
-            List<Application> applications = applicationService.findAll();
-            if (applications != null) {
-                for (Application application : applications) {
-                    if (!application.getCuInstanceName().equalsIgnoreCase(cuInstanceName)) {
-                        continue;
-                    }
-                    try {
-                        // Serveurs
-                        List<Server> servers = application.getServers();
-                        for (Server server : servers) {
-                            DockerContainer dockerContainer = new DockerContainer();
-                            dockerContainer.setName(server.getName());
-                            dockerContainer.setImage(server.getImage()
-                                    .getName());
-                            dockerContainer = DockerContainer.findOne(
-                                    dockerContainer,
-                                    application.getManagerIp());
-                            server = containerMapper
-                                    .mapDockerContainerToServer(
-                                            dockerContainer, server);
-                            containerIdByName.put(server.getName(),
-                                    server.getContainerFullID());
-                        }
-                        // Modules
-                        List<Module> modules = application.getModules();
-                        for (Module module : modules) {
-                            DockerContainer dockerContainer = new DockerContainer();
-                            dockerContainer.setName(module.getName());
-                            dockerContainer.setImage(module.getImage()
-                                    .getName());
-                            dockerContainer = DockerContainer.findOne(
-                                    dockerContainer,
-                                    application.getManagerIp());
-                            module = containerMapper
-                                    .mapDockerContainerToModule(
-                                            dockerContainer, module);
-                            containerIdByName.put(module.getName(),
-                                    module.getContainerFullID());
-                        }
-
-                    } catch (ErrorDockerJSONException ex) {
-                        if (!"docker : no such container".equalsIgnoreCase(ex.getMessage())) {
-                            logger.error(application.toString(), ex);
-                        }
-                    } catch (Exception ex) {
-                        // Si une application sort en erreur, il ne faut pas
-                        // arrêter la suite des traitements
-                        logger.error(application.toString(), ex);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // On catch l'exception car traitement en background.
-            logger.error("" + e.getMessage());
-        }
     }
 
 }

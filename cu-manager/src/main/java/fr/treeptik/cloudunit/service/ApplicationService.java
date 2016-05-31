@@ -51,39 +51,16 @@ public interface ApplicationService {
     void setStatus(Application application, Status status)
             throws ServiceException;
 
-    Application deploy(File file, Application application)
-            throws ServiceException, CheckException;
-
     Application start(Application application)
             throws ServiceException;
 
     Application stop(Application application)
             throws ServiceException;
 
-    List<ContainerUnit> listContainers(String applicationName)
-            throws ServiceException;
-
-    List<String> getListAliases(Application application)
-            throws ServiceException;
-
-    void addNewAlias(Application application, String alias)
-            throws ServiceException, CheckException;
-
-    void updateAliases(Application application)
-            throws ServiceException;
-
-    void removeAlias(Application application, String alias)
-            throws ServiceException, CheckException;
-
     Application remove(Application application, User user)
             throws ServiceException, CheckException;
 
-    Application create(User user, String applicationName,  String serverName, String tagName, String origin)
+    Application create(User user, String applicationName,  String repository, String tagName)
             throws ServiceException, CheckException;
 
-    void addPort(Application application, String nature, Integer port) throws ServiceException;
-
-    void removePort(Application application, Integer port) throws CheckException, ServiceException;
-
-    Integer countApplicationsForImage(String cuInstanceName, User user, String tag) throws CheckException, ServiceException;
 }

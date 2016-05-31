@@ -53,9 +53,6 @@ public class UserServiceImpl
     private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Inject
-    private EmailUtils emailUtils;
-
-    @Inject
     private UserDAO userDAO;
 
     @Inject
@@ -272,110 +269,6 @@ public class UserServiceImpl
         }
     }
 
-    @Transactional
-    @Override
-    public void changePassword(User user, String newPassword)
-            throws ServiceException {
-
-        Map<String, String> configShell = new HashMap<>();
-        String userLogin = user.getLogin();
-        user = this.findById(user.getId());
-        user.setPassword(newPassword);
-        List<Application> listApplications = user.getApplications();
-
-        try {
-            logger.debug("Methods parameters : " + user + " new password : "
-                    + newPassword);
-
-            userDAO.saveAndFlush(user);
-        } catch (PersistenceException e) {
-            logger.error("Error UserService : error changePassword : " + e);
-            throw new ServiceException(e.getLocalizedMessage(), e);
-        }
-        logger.info("UserService : User " + user.getLastName()
-                + " password successfully updated.");
-
-        try {
-
-            for (Application application : listApplications) {
-                for (Server server : application.getServers()) {
-                    configShell.put("port", server.getSshPort());
-                    configShell.put("dockerManagerAddress", server
-                            .getApplication().getManagerIp());
-                    String command = "sh /cloudunit/scripts/change-password.sh "
-                            + userLogin + " " + newPassword;
-                    configShell.put("password", application.getUser()
-                            .getPassword());
-                    shellUtils.executeShell(command, configShell);
-
-                    String commandSource = "source /etc/environment";
-                    logger.debug(commandSource);
-
-                    shellUtils.executeShell(commandSource, configShell);
-                }
-            }
-
-        } catch (Exception e) {
-            logger.error("change Passsword - Error execute ssh Request - " + e);
-            throw new ServiceException(e.getLocalizedMessage(), e);
-        }
-    }
-
-    @Override
-    public void changeEmail(User user, String newEmail)
-            throws ServiceException {
-        Map<String, Object> mapConfigMail = new HashMap<>();
-
-        user.setEmail(newEmail);
-        user.setStatus(User.STATUS_MAIL_NOT_CONFIRMED);
-        this.update(user);
-        mapConfigMail.put("user", user);
-        mapConfigMail.put("emailType", "changeEmail");
-        try {
-            emailUtils.sendEmail(mapConfigMail);
-        } catch (MessagingException e) {
-            logger.error("Error sendEmail method : send mail : " + e);
-            throw new ServiceException("Error : failed to send an email", e);
-        }
-
-    }
-
-    @Override
-    public String sendPassword(User user)
-            throws ServiceException {
-        Map<String, Object> mapConfigMail = new HashMap<>();
-
-        logger.debug("create : Methods parameters : " + user.toString());
-        logger.info("UserService : Starting creating user "
-                + user.getLastName());
-
-        mapConfigMail.put("user", user);
-        mapConfigMail.put("emailType", "sendPassword");
-
-        try {
-            emailUtils.sendEmail(mapConfigMail);
-        } catch (MessagingException e) {
-            logger.error("Error sendEmail method : send mail : " + e);
-            throw new ServiceException("Error : failed to send an email", e);
-        }
-
-        logger.info("UserService : User " + user.getLastName()
-                + " successfully created.");
-
-        return null;
-    }
-
-    @Override
-    @Transactional
-    public void deleteAllUsersMessages(User user)
-            throws ServiceException {
-        try {
-            messageDAO.deleteAllUsersMessages(user.getId());
-        } catch (DataAccessException e) {
-            logger.error("Error delete all messages : " + e);
-            throw new ServiceException("Error : delete all messages", e);
-        }
-    }
 
     @Override
     @Transactional

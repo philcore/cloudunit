@@ -42,7 +42,7 @@ public class ImageController {
     @ResponseBody
     List<Image> listAllImages()
         throws ServiceException {
-        return imageService.findAll();
+        return imageService.list();
     }
 
     @RequestMapping(value = "/module/enabled", method = RequestMethod.GET)
@@ -50,7 +50,7 @@ public class ImageController {
     @ResponseBody
     List<Image> listAllEnabledModuleImages()
         throws ServiceException {
-        return imageService.findEnabledImagesByType("module");
+        return imageService.filterBytType("module");
     }
 
     @RequestMapping(value = "/server/enabled", method = RequestMethod.GET)
@@ -58,7 +58,7 @@ public class ImageController {
     @ResponseBody
     List<Image> listAllEnabledServerImages()
         throws ServiceException {
-        return imageService.findEnabledImagesByType("server");
+        return imageService.filterBytType("server");
     }
 
     @RequestMapping(value = "/version", method = RequestMethod.GET)

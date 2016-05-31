@@ -20,38 +20,27 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.access.method.P;
 
 import java.util.List;
 
 public interface ImageDAO
     extends JpaRepository<Image, Integer> {
 
-    @Query("Select i from Image i where i.name=:name")
+    @Query("Select i from Image i where i.name=:name ")
     Image findByName(@Param("name") String name)
         throws DataAccessException;
 
+    @Query("Select i from Image i where i.repository=:repository and i.tag=:tag")
+    Image findByRepositoryAndTag(@Param("repository") String repository, @Param("tag") String tag)
+            throws DataAccessException;
+
     @Query("select i from Image i")
-    List<Image> findAllEnabledImages()
+    List<Image> list()
         throws DataAccessException;
 
     @Query("select i from Image i where i.imageType=:imageType")
-    List<Image> findAllEnabledImagesByType(@Param("imageType") String imageType)
+    List<Image> filterByType(@Param("imageType") String imageType)
         throws DataAccessException;
-
-    @Query("select count(m) from Module m left join m.application a left join m.image i where i.name LIKE %:name " +
-            "and a.name=:appName and a.user.login=:userLogin " +
-            "and a.cuInstanceName=:cuInstanceName")
-    Long countNumberOfInstances(@Param("name") String moduleName,
-                                @Param("appName") String appName,
-                                @Param("userLogin") String userLogin,
-                                @Param("cuInstanceName") String cuInstanceName)
-        throws DataAccessException;
-
-    @Query("select count(s) from Server s left join s.application a left join s.image i where i.path LIKE %:imageTag " +
-            "and a.user.login=:userLogin")
-    Integer countApplicationsForImageTag(
-                                @Param("userLogin") String userLogin,
-                                @Param("imageTag") String imageTag)
-            throws DataAccessException;
 
 }

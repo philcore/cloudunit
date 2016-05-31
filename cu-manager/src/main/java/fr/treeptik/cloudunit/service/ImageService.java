@@ -34,26 +34,16 @@ public interface ImageService {
     Image findById(Integer id)
         throws ServiceException;
 
-    List<Image> findAll()
+    List<Image> list()
         throws ServiceException;
 
     Image findByName(String name)
         throws ServiceException;
 
-    Image enableImage(String imageName)
-        throws ServiceException;
+    Image findByRepositoryAndTag(String repository, String tag)
+            throws ServiceException;
 
-    Image disableImage(String imageName)
-        throws ServiceException;
-
-    List<Image> findEnabledImages()
-        throws ServiceException;
-
-    List<Image> findEnabledImagesByType(String type)
-        throws ServiceException;
-
-    Long countNumberOfInstances(String moduleName, String applicationName,
-                                String userLogin, String cuInstanceName)
+    List<Image> filterBytType(String type)
         throws ServiceException;
 
 }

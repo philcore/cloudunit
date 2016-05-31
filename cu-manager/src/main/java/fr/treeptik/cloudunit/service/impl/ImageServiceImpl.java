@@ -119,17 +119,27 @@ public class ImageServiceImpl
     }
 
     @Override
-    public List<Image> findAll()
+    public List<Image> list()
             throws ServiceException {
         try {
-            logger.debug("start findAll");
-            List<Image> images = imageDAO.findAll();
+            List<Image> images = imageDAO.list();
             logger.info("ImageService : All Images found ");
             return images;
         } catch (PersistenceException e) {
-            logger.error("Error ImageService : error findById Method : " + e);
             throw new ServiceException(e.getLocalizedMessage(), e);
 
+        }
+    }
+
+    @Override
+    public List<Image> filterBytType(String type)
+            throws ServiceException {
+        try {
+            List<Image> images = imageDAO.filterByType(type);
+            logger.info("ImageService : All Images found ");
+            return images;
+        } catch (PersistenceException e) {
+            throw new ServiceException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -137,93 +147,27 @@ public class ImageServiceImpl
     public Image findByName(String name)
             throws ServiceException {
         try {
-            logger.debug("findById : Methods parameters : " + name);
+            logger.debug("name=" + name);
             Image image = imageDAO.findByName(name);
-            logger.info("image with id " + image.getName() + " found!");
             return image;
         } catch (Exception e) {
-            logger.error("Image Name : " + name);
             throw new ServiceException(name, e);
         }
     }
 
     @Override
-    @Transactional
-    public Image enableImage(String imageName)
-            throws ServiceException {
-        Image image;
-        try {
-            image = this.findByName(imageName);
-            image.setStatus(Image.ENABLED);
-            image = this.update(image);
-        } catch (ServiceException e) {
-            throw new ServiceException(
-                    "Error ImageService : error enable Image", e);
-        }
-
-        return image;
-    }
-
-    @Override
-    @Transactional
-    public Image disableImage(String imageName)
-            throws ServiceException {
-        Image image;
-        try {
-            image = this.findByName(imageName);
-            image.setStatus(Image.DISABLED);
-            image = this.update(image);
-        } catch (ServiceException e) {
-            throw new ServiceException(
-                    "Error ImageService : error disable Image", e);
-        }
-        return image;
-    }
-
-    @Override
-    public List<Image> findEnabledImages()
-            throws ServiceException {
-        try {
-            logger.debug("start find enabled images");
-            List<Image> images = imageDAO.findAllEnabledImages();
-            logger.info("ImageService : enabled found ");
-            return images;
-        } catch (PersistenceException e) {
-            logger.error("Error ImageService : error find enabled images Method : "
-                    + e);
-            throw new ServiceException(e.getLocalizedMessage(), e);
-        }
-    }
-
-    @Override
-    public List<Image> findEnabledImagesByType(String type)
+    public Image findByRepositoryAndTag(String repository, String tag)
             throws ServiceException {
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("start find enabled '" + type + "' images");
+                logger.debug("repository=" + repository);
+                logger.debug("tag=" + tag);
             }
-            List<Image> images = imageDAO.findAllEnabledImagesByType(type);
-            logger.info("ImageService : enabled found ");
-            return images;
-        } catch (PersistenceException e) {
-            logger.error("Error ImageService : error find enabled images Method : "
-                    + e);
-            throw new ServiceException(e.getLocalizedMessage(), e);
+            Image image = imageDAO.findByRepositoryAndTag(repository, tag);
+            return image;
+        } catch (Exception e) {
+            throw new ServiceException(repository+":"+tag, e);
         }
     }
 
-    @Override
-    public Long countNumberOfInstances(String moduleName,
-                                       String applicationName, String userLogin, String cuInstanceName)
-            throws ServiceException {
-        try {
-            return imageDAO.countNumberOfInstances(moduleName, applicationName,
-                    userLogin, cuInstanceName);
-        } catch (PersistenceException e) {
-            logger.error("Error ImageService : error find number of images Method : "
-                    + e);
-            throw new ServiceException(e.getLocalizedMessage(), e);
-
-        }
-    }
 }

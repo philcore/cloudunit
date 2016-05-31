@@ -16,7 +16,6 @@
 package fr.treeptik.cloudunit.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import fr.treeptik.cloudunit.model.action.ServerAction;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -26,69 +25,50 @@ import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.PostLoad;
-import javax.persistence.Transient;
 
 @Entity
 public class Server
-    extends Container
+
     implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private Long jvmMemory;
+    private Long memory;
 
     @Column(columnDefinition = "TEXT")
-    private String jvmOptions;
+    private String options;
 
-    private String jvmRelease;
+    private String release;
 
     private String managerLocation;
 
-    @JsonIgnore
-    @ElementCollection
-    private List<String> links;
+    private Image image;
 
-    @Transient
-    @JsonIgnore
-    private ServerAction serverAction;
+    public Image getImage() {
+        return image;
+    }
 
-    public Server(Integer id, Date startDate, String name, String containerID,
-                  Long memorySize, String containerIP,
-                  Status status, Image image, Map<String, String> listPorts) {
-        super();
-        this.id = id;
-        this.startDate = startDate;
-        this.name = name;
-        this.containerID = containerID;
-        this.memorySize = memorySize;
-        this.containerIP = containerIP;
-        this.status = status;
+    public void setImage(Image image) {
         this.image = image;
     }
 
     public Server() {
     }
 
-    @PostLoad
-    public void initServerActionFromJPA() {
-        ServerFactory.updateServer(this);
+    public Long getMemory() {
+        return memory;
     }
 
-    public Long getJvmMemory() {
-        return jvmMemory;
+    public void setMemory(Long memory) {
+        this.memory = memory;
     }
 
-    public void setJvmMemory(Long jvmMemory) {
-        this.jvmMemory = jvmMemory;
+    public String getOptions() {
+        return options;
     }
 
-    public String getJvmOptions() {
-        return jvmOptions;
-    }
-
-    public void setJvmOptions(String opts) {
-        this.jvmOptions = opts;
+    public void setOptions(String options) {
+        this.options = options;
     }
 
     public String getManagerLocation() {
@@ -99,32 +79,13 @@ public class Server
         this.managerLocation = managerLocation;
     }
 
-    public ServerAction getServerAction() {
-        return serverAction;
-    }
-
-    public void setServerAction(ServerAction serverAction) {
-        this.serverAction = serverAction;
-    }
-
-    public String getJvmRelease() {
-        return jvmRelease;
+    public String release() {
+        return release;
     }
 
     public void setJvmRelease(String jvmRelease) {
-        this.jvmRelease = jvmRelease;
+        this.release = jvmRelease;
     }
 
-    @Override
-    public String toString() {
-        return "Server [id=" + id +
-                ", startDate=" + startDate +
-                ", name=" + name +
-                ", cloudId=" + containerID +
-                ", memorySize=" + memorySize +
-                ", containerIP=" + containerIP +
-                ", image=" + image +
-                ", status=" + status + "]";
-    }
 
 }

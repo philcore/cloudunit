@@ -1,7 +1,10 @@
 package fr.treeptik.cloudunit.service.impl;
 
+import com.spotify.docker.client.messages.Container;
 import fr.treeptik.cloudunit.initializer.CloudUnitApplicationContext;
 import fr.treeptik.cloudunit.service.DockerService;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +14,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import java.util.List;
+import java.util.Random;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -23,6 +32,16 @@ import static org.junit.Assert.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @ActiveProfiles("integration")
 public class DockerServiceImplTest {
+
+    public static Predicate<Container> isNamed(String name) {
+        return p -> p.names().contains("/"+name);
+    }
+
+    public static String containerName;
+    @BeforeClass
+    public static void initEnv() {
+        containerName = "felix" + new Random().nextInt(100000);
+    }
 
     @Autowired
     private DockerService dockerService;
@@ -39,7 +58,13 @@ public class DockerServiceImplTest {
 
     @Test
     public void runContainer() throws Exception {
-        dockerService.runContainer("felix", "tomcat:8.0", null);
+        dockerService.runContainer(containerName, "tomcat:8.0", null);
+        List<Container> containerList = dockerService.list(true);
+        containerList.stream().forEach(p -> System.out.println(p.names()));
+        Assert.assertEquals(1, containerList.stream().filter(isNamed(containerName)).count());
+        dockerService.removeContainer(containerName, true);
+        containerList = dockerService.list(true);
+        Assert.assertEquals(0, containerList.stream().filter(isNamed(containerName)).count());
     }
 
     @Test
